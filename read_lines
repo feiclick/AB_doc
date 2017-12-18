@@ -1,0 +1,24 @@
+https://github.com/xceedsoftware/DocX/blob/master/Examples/Samples/Line/LineSample.cs
+
+http://cathalscorner.blogspot.ca/2010/06/docx-version-1009.html
+
+
+
+List<string> lines = doc.Content.Text.Split('\n').ToList();
+///////////
+public int GetRows(string FilePath)
+{
+using (StreamReader read = new StreamReader(FilePath, Encoding.Default))
+{
+return read.ReadToEnd().Split('\n').Length;
+}
+} 
+////////////////
+Open XML SDK
+count page number: 
+
+using (WordprocessingDocument document = WordprocessingDocument.Open(fileName, false))
+{
+  int pageCount = (int) document.ExtendedFilePropertiesPart.Properties.Pages.Text;
+}
+//////////////////
