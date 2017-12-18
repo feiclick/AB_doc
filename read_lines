@@ -22,3 +22,11 @@ using (WordprocessingDocument document = WordprocessingDocument.Open(fileName, f
   int pageCount = (int) document.ExtendedFilePropertiesPart.Properties.Pages.Text;
 }
 //////////////////
+http://blog.csdn.net/songpengpeng20100202/article/details/7426733
+OpenXml SDK获取Word段落样式和文本: 
+https://gist.github.com/marciocristian/33798ef5a077b264127532ba28c917a1
+
+http://blog.csdn.net/songpengpeng20100202/article/details/7181143 填充色
+foot/header: 
+http://blog.csdn.net/songpengpeng20100202/article/details/7071030
+http://blog.csdn.net/songpengpeng20100202/article/details/7054180
