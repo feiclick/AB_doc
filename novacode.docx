@@ -1,4 +1,7 @@
-  public string GetDataFromWord(String path, int lineNumber)
+ 
+ https://docx.codeplex.com/SourceControl/latest#DocX/DocX.cs
+ 
+ public string GetDataFromWord(String path, int lineNumber)
         {
             // Getting all data from word document
             String returnTxt = "";
