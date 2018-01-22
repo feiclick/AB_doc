@@ -1,0 +1,32 @@
+open xml sdk library: 
+https://msdn.microsoft.com/en-us/library/office/ff478255.aspx
+
+
+
+/////https://stackoverflow.com/questions/34741878/with-openxml-how-do-i-get-the-run-font-size-and-fontfamliy-of-an-word 
+var property = run.RunProperties;
+var fontFamily = (FontFamily)newFontFamilyConverter().ConvertFromString(property.RunFonts.Ascii);
+var fontSize = Convert.ToDouble(property.FontSize.Val * 0.666666667);
+////////////
+
+http://blog.csdn.net/songpengpeng20100202/article/details/7426733:如何根据RelationshipType获取文档格式和段落文本。
+
+
+////
+Stream stream = File.Open(@"test.docx", FileMode.Open);
+WordprocessingDocument wordprocessingDocument = WordprocessingDocument.Open(stream, true);
+// read document content
+string wordcontent = wordprocessingDocument.MainDocumentPart.Document.Body.InnerText;
+// get all fonts of the word document 
+var fonts = wordprocessingDocument.MainDocumentPart.Document.Descendants<runfonts>().Select(c => c.Ascii.HasValue ? c.Ascii.InnerText : string.Empty).Distinct().ToList();</runfonts>
+
+////////////
+
+https://msdn.microsoft.com/en-us/library/office/hh181052.aspx
+
+http://blog.csdn.net/songpengpeng20100202/article/details/7426733  => good
+
+https://stackoverflow.com/questions/26307691/using-openxml-sdk-to-replace-text-on-a-docx-file-with-a-line-break-newline?rq=1
+
+create：
+http://blog.csdn.net/bingle14/article/details/49000009
