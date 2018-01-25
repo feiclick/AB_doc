@@ -1,3 +1,6 @@
+
+using Xceed.Words.NET;
+
 public string GetFontFromWord(String path, int lineNumber)
         {
             // Getting all data from word document
