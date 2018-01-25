@@ -1,0 +1,92 @@
+public string GetFontFromWord(String path, int lineNumber)
+        {
+            // Getting all data from word document
+            String FontName = "";
+            int num = 0;
+           
+            using (DocX doc = DocX.Load(path))
+            {
+                for (int i = 0; i < doc.Paragraphs.Count; i++)
+                {
+                  Paragraph pg = doc.Paragraphs[i];
+
+                    foreach (var mt in pg.MagicText)
+                    {
+                        num++;
+                        if (mt == null)
+                            continue;
+                       
+                        if (mt.formatting != null && num == lineNumber)
+                        {
+                          return  FontName = mt.formatting.FontFamily.Name.ToString();
+                        }
+                                       
+                        
+                    }
+
+                }
+            }
+
+           return FontName;
+        }
+
+        public string GetSizeFromWord(String path, int lineNumber)
+        {
+            // Getting all data from word document
+            String Fontcolor = "";
+            string Size = "";
+            //String Bold = "";
+            int num = 0;
+
+            using (DocX doc = DocX.Load(path))
+            {
+                for (int i = 0; i < doc.Paragraphs.Count; i++)
+                {
+                    Paragraph pg = doc.Paragraphs[i];
+
+                    foreach (var mt in pg.MagicText)
+                    {
+                        num++;
+                        if (mt == null)
+                            continue;
+
+                        if (mt.formatting != null && num == lineNumber)
+                        {
+                            // return FontName = mt.formatting.FontFamily.Name.ToString();
+                            //return Bold = mt.formatting.Bold.ToString();
+                           // return Fontcolor = mt.formatting.FontColor.Name.ToString();
+                            return Size = mt.formatting.Size.ToString();
+
+                        }
+
+
+                    }
+
+                }
+            }
+
+            return Size;
+
+        }
+///////////
+[TestMethod]
+        public void GetValueFromWord()
+        {
+
+            string path = "E:\\WordDocument\\test.docx";
+
+            // string FontNameExpected = "Times New Roman";
+
+            // string FontNameActual = GetFontFromWord(path, 1);
+
+            // Assert.AreEqual(FontNameActual, FontNameExpected);
+
+            string sizeExpected = "12";
+
+            string sizeActual = GetSizeFromWord(path, 1);
+
+            Assert.AreEqual(sizeExpected, sizeActual);
+
+
+        }
+
