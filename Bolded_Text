@@ -1,0 +1,60 @@
+helper: 
+/////
+ public string GetBoldtFromWord(String path, int lineNumber)
+        {
+            // Getting all data from word document
+            String FontName = "";
+            int num = 0;
+
+            using (DocX doc = DocX.Load(path))
+            {
+                for (int i = 0; i < doc.Paragraphs.Count; i++)
+                {
+                    Paragraph pg = doc.Paragraphs[i];
+                    num++;
+
+                    foreach (var magicText in pg.MagicText)
+                    {
+
+                        if (magicText == null)
+                            continue;
+
+                        if ((magicText.formatting != null) && (num == lineNumber) && (magicText.formatting.Bold == true))
+                        {
+
+                            return magicText.text; //FontName = magicText.formatting.Bold.ToString();
+                        }
+
+
+                    }
+
+                }
+            }
+
+            return FontName;
+        }
+
+//use
+
+[TestMethod]
+        public void GetMagicTextFromWord()
+        {
+
+            string path = "E:\\WordDocument\\test.docx";
+
+            string TextExpected = "This site has many different audiences. Depending on your experience with programming, or with the C# language and .NET, you may wish to explore different sections of this guide.";
+
+            string textBoldExpected = "sections of this guide.";
+
+            string TextActual = GetDataFromWord(path, 2).Trim();
+
+            string TextFontAcutal = GetBoldtFromWord(path, 2);
+           
+
+
+            Assert.AreEqual(TextExpected, TextActual);
+            Assert.AreEqual(textBoldExpected, TextFontAcutal);
+
+
+
+        }
