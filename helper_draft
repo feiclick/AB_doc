@@ -1,0 +1,391 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
+using NLog;
+using Novacode;
+using RestSharp;
+using RestSharp.Extensions;
+using Color = DocumentFormat.OpenXml.Wordprocessing.Color;
+using Highlight = DocumentFormat.OpenXml.Wordprocessing.Highlight;
+using Paragraph = DocumentFormat.OpenXml.Wordprocessing.Paragraph;
+using Run = DocumentFormat.OpenXml.Wordprocessing.Run;
+
+namespace ASI.AB.ApiTests
+{
+    public class TestHelper
+    {
+        public Logger Logger = LogManager.GetCurrentClassLogger();
+
+        protected RestClient RestClient { get; set; }
+        protected RestRequest RestRequest { get; set; }
+        protected Method Method  { get; set; } = Method.POST;
+        protected string DownLoadPath { get; set; }
+        protected string ImagePath { get; set; }
+        protected string CurrentPath { get; set; }
+        protected string Url { get; set; } = "aaa0/getaaaa";
+        protected int Count = 1;
+
+        public void Initialize()
+        {
+            CurrentPath = Directory.GetParent(Directory.GetParent(Environment.CurrentDirectory).ToString()).ToString();
+           
+            // setting the REST path for testing
+            RestRequest = new RestRequest(Url, Method);         
+            RestClient = new RestClient("http//....");
+            RestRequest.AddHeader("ApiKey", "...");
+
+            // path for storing images and template for testing
+            DownLoadPath = CurrentPath + "\\Resourses\\Template";
+            ImagePath = CurrentPath + "\\Resourses\\Image";
+        }
+
+
+        public string GetDataFromWord(String path, int lineNumber)
+        {
+        
+            // Getting all data from word document
+            String returnTxt = "";
+            int num = 0;
+            Debug.WriteLine("reading a word doc");
+            using (DocX doc = DocX.Load(path))
+            {
+                for (int i = 0; i < doc.Paragraphs.Count; i++)
+                {
+                    foreach (var item in doc.Paragraphs[i].Text.Split(new[] { "\n" }
+                        , StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        Debug.WriteLine("content -- " + i + item);
+                        num++;
+                        if (num == lineNumber) { return item; }
+                    }
+                }
+            }
+
+            return returnTxt;
+        }
+
+        protected string GetIp(string path)
+	    {
+		    String ip = File.ReadLines(path).First().Trim();
+		    return ip;
+	    }
+
+	    protected byte[] ReadImageFile(string imageLocation)
+	    {
+		    var fileInfo = new FileInfo(imageLocation);
+		    var imageFileLength = fileInfo.Length;
+		    using (var fs = new FileStream(imageLocation, FileMode.Open, FileAccess.Read))
+		    {
+			    var br = new BinaryReader(fs);
+			    return br.ReadBytes((int)imageFileLength);
+		    }
+	    }
+
+	    protected bool ImageCompareArray(Bitmap inputImage, Bitmap outputImage)
+	    {
+		    byte[] inputBytes;
+		    ImageConverter converter = new ImageConverter();
+		    inputBytes = (byte[])converter.ConvertTo(inputImage, typeof(byte[]));
+		    if (inputBytes == null)
+			    return false;
+
+		    byte[] outputBytes;
+		    outputBytes = (byte[])converter.ConvertTo(outputImage, typeof(byte[]));
+		    if (outputBytes == null)
+			    return false;
+
+		    //return inputBytes.SequenceEqual(outputBytes);
+		    return Enumerable.SequenceEqual(inputBytes, outputBytes);
+	    }
+
+	    protected bool ImageCompareSize(Bitmap inputImage, Bitmap outputImage)
+	    {
+		    return inputImage.Size.Equals(outputImage.Size);
+	    }
+
+
+        public class GetHeaders
+        {
+            public string GetFirstHeaderfromWord(string path, int pageNumber)
+            {
+                string s = "";
+                int num = 1;
+                using (WordprocessingDocument doc = WordprocessingDocument.Open(path, false))
+                {
+                    foreach (var sectionProperties in doc.MainDocumentPart.Document.Descendants<SectionProperties>())
+                    {
+                        if (num == pageNumber)
+                        {
+                            foreach (HeaderReference headerReference in sectionProperties.Descendants<HeaderReference>())
+                            {
+                                string headerRelationshipId = headerReference.Id.Value;
+
+                                var headerPart = (HeaderPart) (doc.MainDocumentPart.GetPartById(headerRelationshipId));
+
+                                foreach (Paragraph paragraph in headerPart.RootElement.Descendants<Paragraph>())
+                                foreach (Run run in paragraph.Descendants<Run>())
+                                foreach (Text text in run.Descendants<Text>())
+                                {
+                                    s = text.Text;
+                                    break;
+                                }
+                            }
+
+                            break;
+                        }
+
+                        num++;
+                    }
+                }
+                return s;
+            }
+        }
+
+        public string GetTextColorFromWord(String path, int lineNumber)
+        {
+            // Getting all data from word document
+
+            String Fontcolor = "";         
+
+            int num = 0;
+
+            using (DocX doc = DocX.Load(path))
+            {
+                for (int i = 0; i < doc.Paragraphs.Count; i++)
+                {
+                    Novacode.Paragraph pg = doc.Paragraphs[i];
+
+                    num++;
+
+                    foreach (var magicText in pg.MagicText)
+                    {
+                        if (magicText.formatting != null && num == lineNumber && magicText.formatting.Bold == true)
+                        {
+                             return magicText.formatting.FontColor.GetValueOrDefault().Name;                          
+                       
+                        }
+
+                    }
+
+                }
+            }
+
+            return Fontcolor;
+
+        }
+
+        public string GetBoldedTextFromWord(String path, int lineNumber)
+        {
+            // Getting all data from word document
+            String text = "";
+            int num = 0;
+
+            using (DocX doc = DocX.Load(path))
+            {
+                for (int i = 0; i < doc.Paragraphs.Count; i++)
+                {
+                    var pg = doc.Paragraphs[i];
+                    num++;
+
+                    foreach (var magicText in pg.MagicText)
+                    {
+                        if (magicText?.formatting != null && num == lineNumber && magicText.formatting.Bold == true)
+                        {
+
+                            return magicText.text; 
+                        }
+
+
+                    }
+
+                }
+            }
+
+            return text;
+        }
+
+        public List<string> GetBoldedTextFromWord2(String path)
+        {
+            // Getting all data from word document
+            List<string> boldedTextList = new List<string>();
+
+            string text = "";
+            int num = 0;
+
+            using (DocX doc = DocX.Load(path))
+            {
+                for (int i = 0; i < doc.Paragraphs.Count; i++)
+                {
+                    var pg = doc.Paragraphs[i];
+                    num++;
+                    foreach (var magicText in pg.MagicText)
+                    {
+                      
+                        if (magicText.formatting != null && magicText.formatting.Bold == true && magicText.text !=" ")
+                        {
+                            text = magicText.text;
+                           
+                            boldedTextList.Add(text);
+
+          //foreach (var item in doc.Paragraphs[i].Text.Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries))
+
+                            //  return magicText.text;
+
+                        }
+
+
+                    }
+
+                }
+            }
+
+            return boldedTextList;
+        }
+
+
+        public int GetParagraphNumberFromWord(string path)
+        {
+            int pg;
+           
+            using (DocX doc = DocX.Load(path))
+            {
+               pg = doc.Paragraphs.Count;                                            
+            }
+            return pg;
+        }
+
+
+        public string GetHightLightColorFromWord(String path, int lineNumber)
+        {
+            // Getting all data from word document
+   
+            string Highlight = "";
+
+            int num = 0;
+
+            using (DocX doc = DocX.Load(path))
+            {
+                for (int i = 0; i < doc.Paragraphs.Count; i++)
+                {
+                    Novacode.Paragraph pg = doc.Paragraphs[i];
+                    num++;
+
+                    foreach (var mt in pg.MagicText)
+                    {                    
+                        if (mt == null)
+                            continue;
+
+                        if (num == lineNumber && mt.formatting != null)
+                        {                                                   
+                    
+                            return mt.formatting.Highlight.ToString();//hightlight
+                        }
+
+
+                    }
+                }
+            }
+
+            return Highlight;
+
+        }
+
+        public string GetHightLightTextFromWord(String path, int lineNumber)
+        {
+            // Getting all data from word document
+
+            string Highlight = "";
+
+            int num = 0;
+
+            using (DocX doc = DocX.Load(path))
+            {
+                foreach (Novacode.Paragraph pg in doc.Paragraphs)
+                {
+                    num++;
+                    foreach (var mt in pg.MagicText)
+                    {
+
+                        if (mt == null)
+                            continue;
+
+                        if (mt.formatting != null && num == lineNumber)
+                        {
+
+                            return mt.formatting.Highlight.ToString();//hightlight
+                        }
+
+
+                    }
+                }
+            }
+
+            return Highlight;
+
+        }
+   
+     
+        public int GetPageNumberfromWord(string path)
+        {
+            int pageCount = 0;
+
+            using (WordprocessingDocument doc = WordprocessingDocument.Open(path, false))
+
+                if (doc.ExtendedFilePropertiesPart.Properties.Pages.Text != null)
+                {
+                    pageCount = Convert.ToInt32(doc.ExtendedFilePropertiesPart.Properties.Pages.Text);
+                }
+
+            return pageCount;
+        }
+        public int GetHighlightedTextfromWord(string path)
+        {
+            int pageCount = 0;
+
+            using (WordprocessingDocument doc = WordprocessingDocument.Open(path, false))
+
+                if (doc.ExtendedFilePropertiesPart.Properties.Pages.Text != null)
+                {
+                    pageCount = Convert.ToInt32(doc.ExtendedFilePropertiesPart.Properties.Paragraphs);
+                }
+
+            return pageCount;
+        }
+
+        public string GetHyperLinkFromWord(String path, int lineNumber)
+        {
+            // Getting all data from word document
+            string returnTxt = "";
+            int num = 0;
+            Debug.WriteLine("reading a word doc");
+            using (DocX doc = DocX.Load(path))
+            {
+                for (int i = 0; i < doc.Paragraphs.Count; i++)
+                {
+                    foreach (var item in doc.Paragraphs[i].Text.Split(new[] { "\r", "\n", "\t" }, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        Debug.WriteLine("content -- " + i + item);
+                        num++;
+                        if (num == lineNumber)
+                        {
+                            //return item;
+                            return Regex.Replace(item, " {2,}", " ");
+
+                        }
+                    }
+                }
+            }
+
+            return returnTxt;
+        }
+
+    
+    }
+
+}
