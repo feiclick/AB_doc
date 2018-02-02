@@ -1,0 +1,88 @@
+using System;
+using System.Diagnostics;
+using System.Linq;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
+
+namespace aaaa
+{
+    public static class ScheduleTable
+    {
+        public static string GetDataFromTable(String path, int tableNumber, int rowNumber, int cellNumber)
+        {
+            // Getting all data from word document                 
+            Debug.WriteLine("reading a word doc");
+
+            using (WordprocessingDocument doc = WordprocessingDocument.Open(path, false))
+            {
+                int tnum = 0, rnum = 0, cnum = 0;
+
+                // Table tb = doc.MainDocumentPart.Document.Body.GetTables()[t];
+
+                var tbs = doc.MainDocumentPart.Document.Body.GetTables();
+
+                for (int t = 0; t < tbs.Length; t++)
+                {
+                    // table Rows
+                    var rows = tbs[t].GetTableRows();
+
+                    if (tnum == tableNumber - 1)
+                    {
+
+                        for (int i = 0; i < rows.Length; i++)
+                        {
+                            // table cells
+                            var cells = rows[i].GetTableCells();
+
+                            // show the content
+                            if (rnum == rowNumber - 1)
+                            {
+                                for (int j = 0; j < cells.Length; j++)
+                                {
+                                    if (cnum == cellNumber - 1)
+                                        return cells[j].GetTableCellContent();
+                                    cnum++;
+                                }
+                            }
+                            rnum++;
+                        }
+                    }
+                    tnum++;
+                }
+                return tnum.ToString();
+            }
+        }
+    }
+
+    public static class DocxTableExt
+    {
+        public static Table[] GetTables(this Body body)
+        {
+            return body.Elements<Table>().ToArray();
+
+        }
+        public static TableRow[] GetTableRows(this Table tb)
+
+        {
+            return tb.Elements<TableRow>().ToArray();
+        }
+
+        public static TableCell[] GetTableCells(this TableRow tr)
+        {
+            return tr.Elements<TableCell>().ToArray();
+        }
+
+        public static string GetTableCellContent(this TableCell tc)
+        {
+            return string.Join("\n", tc.Elements<Paragraph>().Select(o => o.InnerText).ToArray());
+
+        }
+
+    }
+}
+//////
+use
+ string strDescpLocActual = ScheduleTable.GetDataFromTable(DownLoadPath + fileName, 2, 7, 3).Trim();
+ 
+ ==> bolded text - location
+ ==>width of cell
