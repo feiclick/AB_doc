@@ -1,0 +1,233 @@
+//work///
+public string GetBoldedTextFromWord(String path, int lineNumber)
+        {
+            // Getting all data from word document
+            string strText = "";
+            int num = 0;
+
+            using (DocX doc = DocX.Load(path))
+            {
+                for (int i = 0; i < doc.Paragraphs.Count; i++)
+                {
+                    var pg = doc.Paragraphs[i];
+                    num++;
+
+                    foreach (var magicText in pg.MagicText)
+                    {
+                        if (magicText?.formatting != null && num == lineNumber && magicText.formatting.Bold == true)
+                        {
+
+                            return magicText.text;
+                        }
+
+
+                    }
+
+                }
+            }
+
+            return strText;
+        }
+
+//Example - header//
+   public class GetHeaders
+        {
+            public string GetFirstHeaderfromWord(string path, int pageNumber)
+            {
+                string s = "";
+                int num = 1;
+                using (WordprocessingDocument doc = WordprocessingDocument.Open(path, false))
+                {
+                    foreach (var sectionProperties in doc.MainDocumentPart.Document.Descendants<SectionProperties>())
+                    {
+                        if (num == pageNumber)
+                        {
+                            foreach (HeaderReference headerReference in sectionProperties.Descendants<HeaderReference>())
+                            {
+                                string headerRelationshipId = headerReference.Id.Value;
+
+                                var headerPart = (HeaderPart) (doc.MainDocumentPart.GetPartById(headerRelationshipId));
+
+                                foreach (Paragraph paragraph in headerPart.RootElement.Descendants<Paragraph>())
+                                foreach (Run run in paragraph.Descendants<Run>())
+                                foreach (Text text in run.Descendants<Text>())
+                                {
+                                    s = text.Text;
+                                    break;
+                                }
+                            }
+
+                            break;
+                        }
+
+                        num++;
+                    }
+                }
+                return s;
+            }
+        }
+
+
+////draft///////
+        public string GetHightLightColorFromWord(String path, int lineNumber)
+        {
+            // Getting all data from word document
+   
+            string Highlight = "";
+
+            int num = 0;
+
+            using (DocX doc = DocX.Load(path))
+            {
+                for (int i = 0; i < doc.Paragraphs.Count; i++)
+                {
+                    Novacode.Paragraph pg = doc.Paragraphs[i];
+                    num++;
+                    if (pg.MagicText!=null)
+                    foreach (var mt in pg.MagicText)
+                    {                      
+                        if (mt == null)
+                            continue;
+                        //if (magicText?.formatting != null && num == lineNumber && magicText.formatting.Bold == true)
+                            if (num == lineNumber && mt.formatting != null)
+                        {                                                   
+                    
+                            return mt.formatting.Highlight.ToString();//hightlight color
+                        }
+                        break;
+
+                    }
+                    
+                }
+                
+            }
+
+            return Highlight;
+
+        }
+
+
+
+        public string GetBoldedTextFromWord2(String path, int lineNumber)
+        {
+            // Getting all data from word document
+            string strText = "";
+            int num = 0;
+
+            using (DocX doc = DocX.Load(path))
+            {
+                for (int i = 0; i < doc.Paragraphs.Count; i++)
+                {
+                    var pg = doc.Paragraphs[i];
+                    num++;
+
+                    foreach (var magicText in pg.MagicText)
+                    {
+                        if (magicText?.formatting != null && num == lineNumber && magicText.formatting.Bold == false)
+                        {
+
+                            return magicText.text;
+                        }
+
+
+                    }
+
+                }
+            }
+
+            return strText;
+        }
+
+
+
+        public string GetBoldTextfromWordNew(string path, int pargNumber)
+        {
+            string s = "";
+            int num = 1;
+            using (WordprocessingDocument doc = WordprocessingDocument.Open(path, false))
+            {
+                foreach (Paragraph par in doc.MainDocumentPart.Document.Descendants<Paragraph>())
+                {
+                    if (num == pargNumber)
+                    {                    
+                        foreach (var run in par.Descendants<Run>())
+                        foreach (var runProperties in run.Elements<RunProperties>())
+                        foreach (var bold in runProperties.Descendants<Bold>())
+                      
+                            if (bold.HasChildren.Equals(true))
+                            {
+                                s = run.InnerText;
+                                break;
+                            }
+                    }
+                    num++;
+                }
+                return s;
+            }
+        }
+
+
+        public string GetHighlightTextfromWordNew(string path, int pargNumber)
+        {
+            string s = "";
+            int num = 1;
+            using (WordprocessingDocument doc = WordprocessingDocument.Open(path, false))
+            {
+                foreach (Paragraph par in doc.MainDocumentPart.Document.Descendants<Paragraph>())
+                {
+                    if (num == pargNumber)
+                    {
+                        foreach (var run in par.Elements<Run>())
+                        foreach (var runChild in run.Elements<RunProperties>())
+                        foreach (var hihghlight in runChild.Elements<Highlight>())
+
+                        if( hihghlight.Val.HasValue)                      
+                            {
+                                s = hihghlight.InnerText;
+                                break;
+                            }
+                    }
+                    num++;
+                }
+                return s;
+            }
+        }
+
+       //get highlight list
+        public List<string> GetListOfHighlightedString(string path)
+        {
+            using (WordprocessingDocument doc = WordprocessingDocument.Open(path, false))
+            {
+
+                List<string> lstOfHighlightedString = new List<string>();
+                try
+                {
+                    foreach (var EachRun in doc.MainDocumentPart.Document.Body.Descendants<Run>())
+                    {
+                        if (EachRun.RunProperties != null)
+                        {
+                            foreach (var EachPrpChild in EachRun.RunProperties.ChildElements)
+                            {
+                                if (EachPrpChild is Highlight)
+                                {
+                                    Highlight highlightVal = EachPrpChild as Highlight;
+                                    if (highlightVal.Val.Equals(HighlightColorValues.Yellow))
+                                    {
+                                        lstOfHighlightedString.Add(EachRun.InnerText);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception e1)
+                {
+                    throw;
+                }
+
+                return lstOfHighlightedString;
+
+            }
+        }
+
+        
