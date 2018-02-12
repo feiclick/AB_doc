@@ -1,0 +1,28 @@
+https://searchcode.com/codesearch/view/116725405/
+
+ using (DocX document = DocX.Load(path))
+            {
+                var highlightTextFormatting = document.Paragraphs[3].MagicText[7].formatting;
+                Assert.AreEqual("yellow", highlightTextFormatting.Highlight.Value.ToString());
+
+            }
+
+
+[TestMethod]
+        public void WhileReadingWhenTextIsBoldItalicUnderlineItShouldReadTheProperFormatting()
+        {
+            using (DocX document = DocX.Load(_directoryWithFiles + "FontFormat.docx"))
+            {
+                var underlinedTextFormatting = document.Paragraphs[0].MagicText[0].formatting;
+                var boldTextFormatting = document.Paragraphs[0].MagicText[2].formatting;
+                var italicTextFormatting = document.Paragraphs[0].MagicText[4].formatting;
+                var boldItalicUnderlineTextFormatting = document.Paragraphs[0].MagicText[6].formatting;
+
+                Assert.IsTrue(boldTextFormatting.Bold.HasValue && boldTextFormatting.Bold.Value);
+                Assert.IsTrue(italicTextFormatting.Italic.HasValue && italicTextFormatting.Italic.Value);
+                Assert.AreEqual(underlinedTextFormatting.UnderlineStyle, UnderlineStyle.singleLine);
+                Assert.IsTrue(boldItalicUnderlineTextFormatting.Bold.HasValue && boldItalicUnderlineTextFormatting.Bold.Value);
+                Assert.IsTrue(boldItalicUnderlineTextFormatting.Italic.HasValue && boldItalicUnderlineTextFormatting.Italic.Value);
+                Assert.AreEqual(boldItalicUnderlineTextFormatting.UnderlineStyle, UnderlineStyle.singleLine);
+            }
+        }
