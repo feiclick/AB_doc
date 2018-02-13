@@ -1,0 +1,94 @@
+	public async Task<string> Upload(Stream stream)
+		{
+			using (var client = new someClient(_accKeyId, _secrAccessKey, _someclient3Config))
+			{
+				var fileTransferUtility = new TransferUtility(client);
+				var fileName = $"{Guid.NewGuid().ToString().ToLower()}.docx";
+
+				await fileTransferUtility.UploadAsync(stream, _bucket, $"{_folder}/{fileName}").ConfigureAwait(false);
+
+				return fileName;
+			}
+		}
+    
+    
+    	public async Task<string> DeleteOldAndUploadNew(string oldFileName, Stream stream)
+		{
+			if (!string.IsNullOrWhiteSpace(oldFileName) && FileExists(oldFileName))
+			{
+				await Delete(oldFileName).ConfigureAwait(false);
+			}
+
+			return await Upload(stream).ConfigureAwait(false);
+		}
+    
+    
+    public async Task<MemoryStream> Download(string fileName)
+		{
+			if (!FileExists(fileName))
+			{
+				throw new Exception($"The File '{fileName}' does not exist.");
+			}
+
+			var request = new GetObjectRequest
+			{
+				BucketName = _bucket,
+				Key = $"{_folder}/{fileName}"
+			};
+
+			using (var client = new AmazonS3Client(_acceKeyId, _secretAccsKey, _someS3Config))
+			{
+				using (var response = await client.GetObjectAsync(request).ConfigureAwait(false))
+				{
+					var ms = new MemoryStream();
+					response.ResponseStream.CopyTo(ms);
+
+					return ms;
+				}
+			}
+		}
+
+    
+public async Task<ResponseObjectModel> Delete(string fileName)
+		{
+			if (string.IsNullOrWhiteSpace(fileName))
+			{
+				return new ResponseObjectModel { ResponseCode = ResponseCode.FileNameEmpty, ResponseMessage = $"The Filename '{fileName}' cannot be empty." };
+			}
+
+			if (!FileExists(fileName))
+			{
+				return new ResponseObjectModel { ResponseCode = ResponseCode.FileNotExists, ResponseMessage = $"The File '{fileName}' does not exist." };
+			}
+
+			var request = new DeleteObjectRequest
+			{
+				BucketName = _bucket,
+				Key = $"{_folder}/{fileName}"
+			};
+
+			using (var client = new someS3Client(_accessKeyId, _secretAccessKey, _someS3Config))
+			{
+				await client.DeleteObjectAsync(request).ConfigureAwait(false);
+			}
+
+			return new ResponseObjectModel { ResponseCode = ResponseCode.OK };
+		}
+
+
+		public bool FileExists(string fileName)
+		{
+			try
+			{
+				using (var client = new AmazonS3Client(_accId, _secretAccsKey, _amazonS3Config))
+				{
+					var file = new S3FileInfo(client, _bucket, $"{_folder}/{fileName}");
+
+					return file.Exists;
+				}
+			}
+			catch (Exception)
+			{
+				return false;
+			}
+		}
